@@ -7,11 +7,13 @@ from app.database import get_session
 from app.models.user import User
 
 import os
+from pathlib import Path
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from jose import jwt
 
-load_dotenv()
+env_path = Path(__file__).parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
@@ -19,7 +21,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 #token creation and verification
 def create_access_token(user_id: str) -> str:
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode = {"sub": user_id, "exp": expire}
+    to_encode = {"sub": str(user_id), "exp": expire}
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def verify_token(token: str) -> int:
@@ -47,7 +49,8 @@ async def get_current_user(
     token = credentials.credentials
     try:
         user_id = verify_token(token)
-    except Exception: 
+    except Exception as e: 
+        print("Ошибка при валидации токена:", e)
         raise HTTPException(status_code=401, detail="Invalid token")
 
     query = select(User).where(User.id == user_id)
