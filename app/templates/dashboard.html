@@ -6,6 +6,28 @@
 <body>
     <h1>My Transactions</h1>
 
+    <h2>Add Category</h2>
+    <form id="addCategoryForm">
+        <input type="text" id="categoryNameInput" placeholder="Category name">
+        <button type="submit">Add Category</button>
+    </form>
+
+    <h2>Add Transaction</h2>
+
+    <form id="addTransactionForm">
+        <input type="number" id="amountInput" placeholder="Amount" step="0.01">
+        <select id="typeInput">
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+        </select>
+        <select id="categoryInput"></select>
+        <input type="date" id="dateInput">
+        <input type="text" id="descriptionInput" placeholder="Description">
+        <button type="submit">Add</button>
+    </form>
+
+    <h2>My Transactions</h2>
+
     <div id="transactionsList"></div>
 
     <script src="/static/dashboard.js"></script>
