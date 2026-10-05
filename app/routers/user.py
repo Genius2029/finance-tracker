@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from sqlmodel import select
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.database import get_session
 from app.models.user import User
@@ -17,7 +17,7 @@ async def register_user(data: UserCreate, session: AsyncSession = Depends(get_se
         email=data.email,
         full_name=data.full_name,
         hashed_password=hash_password(data.password),
-        created_at=datetime.utcnow().isoformat()
+        created_at=datetime.now(timezone.utc).isoformat()
     )
     session.add(new_user)
     await session.commit()

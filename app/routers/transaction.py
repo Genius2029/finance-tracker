@@ -1,4 +1,4 @@
-from datetime import datetime 
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select, func
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -28,7 +28,7 @@ async def create_transaction(
         category_id=category_id,
         amount=data.amount,
         type=data.type,
-        date=datetime.utcnow().isoformat(),
+        date=datetime.now(timezone.utc).isoformat(),
         description=data.description
     )
     session.add(new_transaction)
@@ -87,9 +87,9 @@ async def get_transaction_summary(
 
     return [
         {
-            "category_id": row.category_id,
-            "type": row.type,
-            "total": row.total
+            "category_id": row[0],
+            "type": row[1],
+            "total": row[2]
         }
         for row in rows
     ]

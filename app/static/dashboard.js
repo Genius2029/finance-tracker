@@ -20,7 +20,22 @@ async function loadTransactions() {
 
     transactions.forEach(function(t) {
         const item = document.createElement("p");
-        item.textContent = `${t.date} — ${t.type} — ${t.amount}`;
+        const dateObj = new Date(t.date);
+        const formattedDate = dateObj.toLocaleDateString('en-US', { 
+            year: '2-digit', 
+            month: 'numeric', 
+            day: 'numeric',
+            timeZone: 'Asia/Seoul' 
+        });
+
+        const formattedTime = dateObj.toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit', 
+            hour12: true,
+            timeZone: 'Asia/Seoul' 
+        });
+
+        item.textContent = `${formattedDate} ${formattedTime} — ${t.type} — ${t.amount} — ${t.description}`;
 
         const deleteButton = document.createElement("button");
         deleteButton.textContent = "Delete";
@@ -32,6 +47,7 @@ async function loadTransactions() {
                 }
             });
             loadTransactions();
+            loadSummary();
         });
         item.appendChild(deleteButton);
         listDiv.appendChild(item);
@@ -74,6 +90,7 @@ document.getElementById("addTransactionForm").addEventListener("submit", async f
     if (response.ok) {
         document.getElementById("addTransactionForm").reset();
         loadTransactions();
+        loadSummary();
     } else {
         alert("Error adding transaction");
     }
@@ -101,5 +118,36 @@ document.getElementById("addCategoryForm").addEventListener("submit", async func
     }
 });
 
+async function loadSummary() {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch("/transactions/summary", {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
+    });
+
+    const summary = await response.json();
+
+    const categoriesResponse = await fetch("/categories");
+    const categories = await categoriesResponse.json();
+
+    const summaryDiv = document.getElementById("summaryList");
+    summaryDiv.innerHTML = "";
+
+    summary.forEach(function(row) {
+        const category = categories.find(function(c) {
+            return c.id === row.category_id;
+        });
+        const categoryName = category ? category.name : "Unknown";
+
+        const item = document.createElement("p");
+        item.textContent = `${categoryName} (${row.type}): ${row.total}`;
+        summaryDiv.appendChild(item);
+    });
+}
+
 loadCategories();
 loadTransactions();
+loadSummary();
