@@ -2,39 +2,54 @@
 <html>
 <head>
     <title>Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-    <h1>My Transactions</h1>
+    <h1>Dashboard</h1>
 
-    <h2>Add Category</h2>
-    <form id="addCategoryForm">
-        <input type="text" id="categoryNameInput" placeholder="Category name">
-        <button type="submit">Add Category</button>
-    </form>
+    <div class="dashboard-container">
+        <div class="left-panel">
+            <h2>Add Category</h2>
+            <form id="addCategoryForm">
+                <input type="text" id="categoryNameInput" placeholder="Category name">
+                <button type="submit">Add Category</button>
+            </form>
 
-    <h2>Add Transaction</h2>
+            <h2>Filter</h2>
+            <form id="filterForm">
+                <input type="date" id="filterStartDate">
+                <input type="date" id="filterEndDate">
+                <button type="submit">Apply Filter</button>
+            </form>
 
-    <form id="addTransactionForm">
-        <input type="number" id="amountInput" placeholder="Amount" step="0.01">
-        <select id="typeInput">
-            <option value="expense">Expense</option>
-            <option value="income">Income</option>
-        </select>
-        <select id="categoryInput"></select>
-        <input type="date" id="dateInput">
-        <input type="text" id="descriptionInput" placeholder="Description">
-        <button type="submit">Add</button>
-    </form>
+            <h2>Add Transaction</h2>
+            <form id="addTransactionForm">
+                <input type="number" id="amountInput" placeholder="Amount" step="0.01">
+                <select id="typeInput">
+                    <option value="expense">Expense</option>
+                    <option value="income">Income</option>
+                </select>
+                <select id="categoryInput"></select>
+                <input type="date" id="dateInput">
+                <input type="text" id="descriptionInput" placeholder="Description">
+                <button type="submit">Add</button>
+            </form>
+        </div>
 
-    <h2>Summary</h2>
-    <div id="summaryList"></div>
+        <div class="right-panel">
+            <h2>Spending Chart</h2>
+            <canvas id="spendingChart"></canvas>
 
-    <h2>My Transactions</h2>
+            <h2>Summary</h2>
+            <div id="summaryList"></div>
 
-    <div id="transactionsList"></div>
-
+            <h2>My Transactions</h2>
+            <div id="transactionsList"></div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/static/dashboard.js"></script>
 </body>
 </html>

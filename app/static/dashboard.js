@@ -1,11 +1,18 @@
-async function loadTransactions() {
+const token = localStorage.getItem("token");
+if (!token) {window.location.href = "/ login";}
+
+async function loadTransactions(startDate, endDate) {
+
     const token = localStorage.getItem("token");
 
-    const response = await fetch("/transactions", {
+    let url = "/transactions";
+    if (startDate && endDate) {
+        url += `?start_date=${startDate}&end_date=${endDate}`;
+    }
+
+    const response = await fetch(url, {
         method: "GET",
-        headers: {
-            "Authorization": `Bearer ${token}`
-        }
+        headers: {"Authorization": `Bearer ${token}`}
     });
 
     if (!response.ok) {
@@ -14,12 +21,10 @@ async function loadTransactions() {
     }
 
     const transactions = await response.json();
-
     const listDiv = document.getElementById("transactionsList");
     listDiv.innerHTML = "";
 
     transactions.forEach(function(t) {
-        const item = document.createElement("p");
         const dateObj = new Date(t.date);
         const formattedDate = dateObj.toLocaleDateString('en-US', { 
             year: '2-digit', 
@@ -28,27 +33,28 @@ async function loadTransactions() {
             timeZone: 'Asia/Seoul' 
         });
 
-        const formattedTime = dateObj.toLocaleTimeString('en-US', { 
-            hour: 'numeric', 
-            minute: '2-digit', 
-            hour12: true,
-            timeZone: 'Asia/Seoul' 
-        });
-
-        item.textContent = `${formattedDate} ${formattedTime} — ${t.type} — ${t.amount} — ${t.description}`;
+        const item = document.createElement("p");
+            item.textContent = `${formattedDate} — ${t.type} — ${t.amount} — ${t.description} `;
+            
+            const editButton = document.createElement("button");
+            editButton.textContent = "Edit";
+            editButton.addEventListener("click", function() {
+                openEditForm(t);
+            });
 
         const deleteButton = document.createElement("button");
         deleteButton.textContent = "Delete";
         deleteButton.addEventListener("click", async function() {
             await fetch(`/transactions/${t.id}`, {
                 method: "DELETE",
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
+                headers: { "Authorization": `Bearer ${token}` }
             });
             loadTransactions();
             loadSummary();
+            loadChart();
         });
+
+        item.appendChild(editButton);
         item.appendChild(deleteButton);
         listDiv.appendChild(item);
     });
@@ -118,6 +124,86 @@ document.getElementById("addCategoryForm").addEventListener("submit", async func
     }
 });
 
+async function openEditForm(t) {
+    const newAmount = prompt("New amount:", t.amount);
+    if (newAmount === null) return;
+
+    const token = localStorage.getItem("token");
+
+    await fetch(`/transactions/${t.id}?category_id=${t.category_id}`, {
+        method: "PATCH",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            amount: parseFloat(newAmount),
+            type: t.type,
+            date: t.date,
+            description: t.description
+        })
+    });
+
+    loadTransactions();
+    loadSummary();
+    loadChart();
+}
+
+let chartInstance = null;
+
+async function loadChart(startDate, endDate) {
+    const token = localStorage.getItem("token");
+
+    let url = "/transactions/chart-data";
+    if (startDate && endDate) {
+        url += `?start_date=${startDate}&end_date=${endDate}`;
+    }
+
+    const response = await fetch(url, {
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+    const data = await response.json();
+
+    const dates = [...new Set(data.map(row => row.date))];
+    const expenseData = dates.map(d => {
+        const row = data.find(r => r.date === d && r.type === "expense");
+        return row ? row.total : 0;
+    });
+
+    const ctx = document.getElementById("spendingChart");
+
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: dates,
+            datasets: [{
+                label: 'Expenses',
+                data: expenseData,
+                backgroundColor: '#e5e5e5'
+            }]
+        },
+        options: {
+            scales: {
+                y: { ticks: { color: '#9ca3af' } },
+                x: { ticks: { color: '#9ca3af' } }
+            },
+            plugins: { legend: { labels: { color: '#f5f5f5' } } }
+        }
+    });
+}
+
+document.getElementById("filterForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+    const start = document.getElementById("filterStartDate").value;
+    const end = document.getElementById("filterEndDate").value;
+    if (start && end) {
+        loadTransactions(start, end);
+        loadChart(start, end);
+    }
+});
+
 async function loadSummary() {
     const token = localStorage.getItem("token");
 
@@ -151,3 +237,4 @@ async function loadSummary() {
 loadCategories();
 loadTransactions();
 loadSummary();
+loadChart();
